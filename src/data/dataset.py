@@ -12,7 +12,7 @@ class Detection(Dataset):
         self.video_folders = sorted([folder_name
                                 for folder_name in os.listdir(self.data_path)
                                 if "FRCNN" in folder_name])
-        self.frame_size = 32
+        self.frame_size = 16
         self.mode = mode
         self.transform = transform
         self.video_indices = np.argsort(self.video_folders)
