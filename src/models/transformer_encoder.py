@@ -1,13 +1,20 @@
 import torch
 import torch.nn.functional as f
 from torch import nn
+from einops import rearrange
 
 
 def scaled_dot_product_attention(query, key, value):
-    attention = torch.bmm(query, key.transpose(1, 2))
+    attention = torch.einsum('bdtc,beuc->bdteu',[query,key])
+    mask = torch.zeros_like(attention)
+    for frame in torch.arange(mask.size(-2)):
+        mask[:, frame, :, frame:, :] = float('-inf')
+    attention +=mask
     scale = query.size(-1) ** 0.5
+    attention = rearrange(attention, 'b f t g u->b f t (g u)')
     softmax = f.softmax(attention / scale, dim=-1)
     return softmax.bmm(value)
+
 
 
 class AttentionHead(nn.Module):
@@ -96,7 +103,6 @@ class TransformerEncoder(nn.Module):
     def forward(self, src):
         for layer in self.layers:
             src = layer(src)
-
         return src
 
 
